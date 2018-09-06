@@ -9,11 +9,13 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorConvertOp;
 import java.io.File;
 import java.io.IOException;
 import java.awt.event.ActionEvent;
 import java.awt.BorderLayout;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Image;
 
 public class AppWin extends JFrame {
@@ -31,7 +33,7 @@ public class AppWin extends JFrame {
 	private JButton btn_getImage;
 	private JLabel lbl_sourceImg;
 	private BufferedImage sourceImg;
-	private JButton btn_start;
+	private BufferedImage grayscaleImg;
 	private JLabel lbl_outputImg;
 	private JTextArea txt_pixelInfo;
 
@@ -71,9 +73,9 @@ public class AppWin extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
 					pickSourceImg();
-					btn_start.setEnabled(true);
 				}
 				catch (Exception ex) {
+					ex.printStackTrace();
 					JOptionPane.showMessageDialog(rootPane, "Ha ocurrido un error al seleccionar una imagen."
 														  + "El archivo seleccionado debe ser de formato JPG, PNG, JPEG o BMP.",
 												  "ERROR - Seleccionar imagen fuente", JOptionPane.ERROR_MESSAGE);
@@ -93,6 +95,27 @@ public class AppWin extends JFrame {
 		lbl_sourceImg.setHorizontalAlignment(SwingConstants.CENTER);
 		pnl_sourceImg.add(lbl_sourceImg, BorderLayout.CENTER);
 		
+		JCheckBox chkbx_grayscale = new JCheckBox("Grayscale");
+		chkbx_grayscale.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				try {
+					if (chkbx_grayscale.isSelected()) {
+						lbl_sourceImg.setIcon(new ImageIcon(grayscaleImg));
+					}
+					else {
+						lbl_sourceImg.setIcon(new ImageIcon(sourceImg));
+					}
+				}
+				catch(Exception ex) {
+					JOptionPane.showMessageDialog(rootPane, "Por favor, seleccione una imagen fuente.", "ERROR", JOptionPane.ERROR_MESSAGE);
+					chkbx_grayscale.setSelected(false);
+				}
+			}
+		});
+		chkbx_grayscale.setBounds(352, 355, 113, 25);
+		chkbx_grayscale.setFont(fnt_normal);
+		mainPane.add(chkbx_grayscale);
+		
 		JLabel lbl_conditions = new JLabel("Condiciones del algoritmo");
 		lbl_conditions.setFont(fnt_title);
 		lbl_conditions.setBounds(360, 20, 240, 25);
@@ -109,13 +132,15 @@ public class AppWin extends JFrame {
 		JPanel panel_1 = new JPanel();
 		tabPnl_conditions.addTab("New tab", null, panel_1, null);
 		
-		btn_start = new JButton("Empezar");
-		btn_start.setEnabled(false);
+		JButton btn_start = new JButton("Empezar");
 		btn_start.setBounds(668, 350, 100, 30);
 		btn_start.setFont(fnt_title );
 		btn_start.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				generarImg();
+				if (lbl_sourceImg.getIcon() != null)
+					generarImg();
+				else
+					JOptionPane.showMessageDialog(rootPane, "Por favor, seleccione una imagen fuente.", "ERROR", JOptionPane.ERROR_MESSAGE);
 			}
 		});
 		mainPane.add(btn_start);
@@ -160,25 +185,48 @@ public class AppWin extends JFrame {
         if (imgChooser.showOpenDialog(null)==JFileChooser.APPROVE_OPTION) {
         	File file = imgChooser.getSelectedFile();
             sourceImg = ImageIO.read(file);
-            int width = 320,
-            	height = 320;
-            if (sourceImg.getWidth() > sourceImg.getHeight())
-            	height = -1;
-            else if (sourceImg.getHeight() > sourceImg.getWidth())
-            	width = -1;
-            ImageIcon icon = new ImageIcon(sourceImg.getScaledInstance(width, height, Image.SCALE_SMOOTH));
-            lbl_sourceImg.setIcon(icon);
+            sourceImg =  resizeImg();
+            grayscaleImg = getGrayscale();
+            lbl_sourceImg.setIcon(new ImageIcon(sourceImg));
             lbl_sourceImg.setText(null);
             btn_getImage.setText(file.getPath());
         }
+	}
+	
+	public BufferedImage resizeImg()
+	{
+		int width = 320,
+        	height = 320;
+        if (sourceImg.getWidth() > sourceImg.getHeight())
+        	height = -1;
+        else if (sourceImg.getHeight() > sourceImg.getWidth())
+        	width = -1;
+        Image toolkitImage = sourceImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
+        width = toolkitImage.getWidth(null);
+        height = toolkitImage.getHeight(null);
+        BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = resizedImage.getGraphics();
+        g.drawImage(toolkitImage, 0, 0, null);
+        g.dispose();
+        
+        return resizedImage;
+	}
+	
+	public BufferedImage getGrayscale()
+	{
+		BufferedImage grayscaleImg = new BufferedImage(sourceImg.getWidth(), sourceImg.getHeight(), BufferedImage.TYPE_BYTE_GRAY);
+
+        // convert colored image to grayscale
+        ColorConvertOp grayScale = new ColorConvertOp(sourceImg.getColorModel().getColorSpace(), grayscaleImg.getColorModel().getColorSpace(),null);
+        grayScale.filter(sourceImg, grayscaleImg);
+		return grayscaleImg;
 	}
 	
 	public void generarImg()
 	{
 		txt_pixelInfo.setText(null);
 		BufferedImage img = generador.createImage();
-		ImageIcon imgIcon = new ImageIcon(img);
-		lbl_outputImg.setIcon(imgIcon);
+		lbl_outputImg.setIcon(new ImageIcon(img));
 		pixelReader.processPixels(img);
 	}
 }
