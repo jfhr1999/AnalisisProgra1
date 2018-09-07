@@ -7,10 +7,8 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 public class GeneradorImagenes {
-	private int width = 320;
-	private int height = 320;
 	
-	public BufferedImage createImage() {
+	public BufferedImage createImage(int width, int height) {
 		File f = null;
 		BufferedImage img = new BufferedImage(width, height,BufferedImage.TYPE_INT_ARGB);
 		for(int y = 0; y < height; y++) {

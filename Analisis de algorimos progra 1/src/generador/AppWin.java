@@ -7,6 +7,8 @@ import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import geneticAlgorithm.AlgorithmManager;
+
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
@@ -17,26 +19,41 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
 
 public class AppWin extends JFrame {
 	private static final long serialVersionUID = 1L;
 	
-	//util
+	// Utilities
 	private static final Font fnt_normal = new Font("DialogInput", Font.PLAIN, 14);
 	private static final Font fnt_title = new Font("Consolas", Font.PLAIN, 16);
 	private JFileChooser imgChooser;
 	private GeneradorImagenes generador = new GeneradorImagenes();
 	private PixelReader pixelReader;
+	private AlgorithmManager algorithmManager;
+	private int actualWidth = 0;
+	private int actualHeight = 0;
 	
-	//UI
+	// UI ~ ~ ~ ~ ~ ~
 	private JPanel mainPane;
 	private JButton btn_getImage;
 	private JLabel lbl_sourceImg;
 	private BufferedImage sourceImg;
 	private BufferedImage grayscaleImg;
+	private JCheckBox chkbx_grayscale;
+	private JLabel lbl_imgSize;
+	
+	// Algorithm Parameters
+	private JSlider sldr_startingPop;
+	private JLabel lbl_startingPopNum;
+	
+	
+	// Output 
 	private JLabel lbl_outputImg;
 	private JTextArea txt_pixelInfo;
 
+	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -72,7 +89,35 @@ public class AppWin extends JFrame {
 		btn_getImage.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
-					pickSourceImg();
+					if (pickSourceImg())
+					{
+
+						//grayscale checkbox
+						if (!chkbx_grayscale.isEnabled())
+							chkbx_grayscale.setEnabled(true);
+						else if (chkbx_grayscale.isSelected())
+							chkbx_grayscale.setSelected(false);
+						
+						//starting population slider & size label
+						if (!sldr_startingPop.isEnabled())
+							sldr_startingPop.setEnabled(true);
+						
+						float maxInitPop;
+						String sizeStr = "Tamaño: ";
+						if (sourceImg.getWidth() < actualWidth && sourceImg.getHeight() < actualHeight) {
+							sizeStr += sourceImg.getWidth() + "x" + sourceImg.getHeight() + "("+sourceImg.getWidth()*sourceImg.getHeight()+")";
+							maxInitPop = sourceImg.getWidth() * sourceImg.getHeight();
+						}
+						else {
+							sizeStr += actualWidth + "x" + actualHeight + "("+actualWidth*actualHeight+")";
+							maxInitPop = actualWidth * actualHeight;
+						}
+						maxInitPop = (maxInitPop/100)*25;
+						lbl_imgSize.setText(sizeStr);
+						sldr_startingPop.setMaximum((int) maxInitPop);
+						sldr_startingPop.setMinorTickSpacing((int) (maxInitPop-64)/10);
+						sldr_startingPop.setValue(64);
+					}
 				}
 				catch (Exception ex) {
 					ex.printStackTrace();
@@ -95,7 +140,8 @@ public class AppWin extends JFrame {
 		lbl_sourceImg.setHorizontalAlignment(SwingConstants.CENTER);
 		pnl_sourceImg.add(lbl_sourceImg, BorderLayout.CENTER);
 		
-		JCheckBox chkbx_grayscale = new JCheckBox("Grayscale");
+		chkbx_grayscale = new JCheckBox("Grayscale");
+		chkbx_grayscale.setEnabled(false);
 		chkbx_grayscale.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
@@ -112,22 +158,50 @@ public class AppWin extends JFrame {
 				}
 			}
 		});
-		chkbx_grayscale.setBounds(352, 355, 113, 25);
+		chkbx_grayscale.setBounds(348, 352, 113, 25);
 		chkbx_grayscale.setFont(fnt_normal);
 		mainPane.add(chkbx_grayscale);
 		
-		JLabel lbl_conditions = new JLabel("Condiciones del algoritmo");
-		lbl_conditions.setFont(fnt_title);
-		lbl_conditions.setBounds(360, 20, 240, 25);
-		mainPane.add(lbl_conditions);
+		JLabel lbl_options = new JLabel("Opciones del algoritmo:");
+		lbl_options.setFont(fnt_title);
+		lbl_options.setBounds(360, 20, 240, 25);
+		mainPane.add(lbl_options);
 		
 		JTabbedPane tabPnl_conditions = new JTabbedPane(JTabbedPane.TOP);
 		tabPnl_conditions.setFont(fnt_normal);
 		tabPnl_conditions.setBounds(352, 60, 416, 285);
 		mainPane.add(tabPnl_conditions);
 		
-		JPanel panel = new JPanel();
-		tabPnl_conditions.addTab("New tab", null, panel, null);
+		JPanel pnl_generalOptions = new JPanel();
+		tabPnl_conditions.addTab("General", null, pnl_generalOptions, null);
+		pnl_generalOptions.setLayout(null);
+		
+		JLabel lbl_startingPop = new JLabel("Poblaci\u00F3n inicial:");
+		lbl_startingPop.setBounds(15, 15, 150, 20);
+		lbl_startingPop.setFont(fnt_normal);
+		pnl_generalOptions.add(lbl_startingPop);
+		
+		sldr_startingPop = new JSlider();
+		sldr_startingPop.setEnabled(false);
+		sldr_startingPop.setMaximum(164);
+		sldr_startingPop.setMinorTickSpacing(10);
+		sldr_startingPop.setValue(64);
+		sldr_startingPop.setMinimum(64);
+		sldr_startingPop.setPaintTicks(true);
+		sldr_startingPop.setPaintLabels(true);
+		sldr_startingPop.setBounds(25, 35, 300, 30);
+		sldr_startingPop.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				lbl_startingPopNum.setText(String.valueOf(sldr_startingPop.getValue()));
+			}
+		});
+		pnl_generalOptions.add(sldr_startingPop);
+		
+		
+		lbl_startingPopNum = new JLabel("0");
+		lbl_startingPopNum.setBounds(339, 35, 60, 30);
+		lbl_startingPopNum.setFont(fnt_normal);
+		pnl_generalOptions.add(lbl_startingPopNum);
 		
 		JPanel panel_1 = new JPanel();
 		tabPnl_conditions.addTab("New tab", null, panel_1, null);
@@ -178,37 +252,51 @@ public class AppWin extends JFrame {
 		JSeparator sp1 = new JSeparator();
 		sp1.setBounds(20, 400, 748, 2);
 		mainPane.add(sp1);
+		
+		lbl_imgSize = new JLabel("Tama\u00F1o:");
+		lbl_imgSize.setBounds(460, 352, 196, 25);
+		lbl_imgSize.setFont(fnt_normal);
+		mainPane.add(lbl_imgSize);
 	}
 	
-	public void pickSourceImg() throws IOException
+	public boolean pickSourceImg() throws IOException
 	{
+		boolean result = false;
         if (imgChooser.showOpenDialog(null)==JFileChooser.APPROVE_OPTION) {
         	File file = imgChooser.getSelectedFile();
-            sourceImg = ImageIO.read(file);
-            sourceImg =  resizeImg();
-            grayscaleImg = getGrayscale();
-            lbl_sourceImg.setIcon(new ImageIcon(sourceImg));
-            lbl_sourceImg.setText(null);
-            btn_getImage.setText(file.getPath());
+            BufferedImage newSourceImg = ImageIO.read(file);
+            if (newSourceImg.getWidth() >= 32 && newSourceImg.getHeight() >= 32) 
+            {
+	            actualWidth = newSourceImg.getWidth();
+	            actualHeight = newSourceImg.getHeight();
+	            sourceImg = resizeImg(320, 320, newSourceImg);
+	            grayscaleImg = getGrayscale();
+	            lbl_sourceImg.setIcon(new ImageIcon(sourceImg));
+	            lbl_sourceImg.setText(null);
+	            btn_getImage.setText(file.getPath());
+	            result = true;
+	        }
+            else {
+            	JOptionPane.showMessageDialog(rootPane, "El ancho y/o el largo de la imagen es menor a 32 pixeles. Las dimensiones mínimas son 32x32",
+            								  "ERROR - Imagen de tamaño inválido", JOptionPane.WARNING_MESSAGE);
+            }
         }
+        return result;
 	}
-	
-	public BufferedImage resizeImg()
+		
+	public BufferedImage resizeImg(int desiredWidth, int desiredHeight, BufferedImage img)
 	{
-		int width = 320,
-        	height = 320;
-        if (sourceImg.getWidth() > sourceImg.getHeight())
-        	height = -1;
-        else if (sourceImg.getHeight() > sourceImg.getWidth())
-        	width = -1;
-        Image toolkitImage = sourceImg.getScaledInstance(width, height, Image.SCALE_SMOOTH);
-        width = toolkitImage.getWidth(null);
-        height = toolkitImage.getHeight(null);
-        BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        if (img.getWidth() > img.getHeight())
+        	desiredHeight = -1;
+        else if (img.getHeight() > img.getWidth())
+        	desiredWidth = -1;
+        Image toolkitImage = img.getScaledInstance(desiredWidth, desiredHeight, Image.SCALE_SMOOTH);
+        desiredWidth = toolkitImage.getWidth(null);
+        desiredHeight = toolkitImage.getHeight(null);
+        BufferedImage resizedImage = new BufferedImage(desiredWidth, desiredHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics g = resizedImage.getGraphics();
         g.drawImage(toolkitImage, 0, 0, null);
         g.dispose();
-        
         return resizedImage;
 	}
 	
@@ -225,8 +313,15 @@ public class AppWin extends JFrame {
 	public void generarImg()
 	{
 		txt_pixelInfo.setText(null);
-		BufferedImage img = generador.createImage();
-		lbl_outputImg.setIcon(new ImageIcon(img));
+		int width = sourceImg.getWidth(), 
+			height = sourceImg.getHeight();
+		if (width > actualWidth && height > actualHeight) {
+			width = actualWidth;
+			height = actualHeight;
+		}
+		BufferedImage img = generador.createImage(width, height);
 		pixelReader.processPixels(img);
+		img = resizeImg(320, 320, img);
+		lbl_outputImg.setIcon(new ImageIcon(img));
 	}
 }
