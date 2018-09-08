@@ -5,13 +5,14 @@ import java.awt.image.BufferedImage;
 public class AlgorithmManager 
 {
 	//algoritmos de similitud
-	private static final int FIT_Euclidean = 0;
-	private static final int FIT_Algorithm1 = 1;
-	private static final int FIT_Algorithm2 = 2;
+	public static final int FIT_Euclidean = 0;
+	public static final int FIT_Algorithm1 = 1;
+	public static final int FIT_Algorithm2 = 2;
 	
 	private int selectedAlgorithm = 0;
 	
 	private BufferedImage solution;
+	private Population population;
 	
 	public void setFitnessAlgorithm(int selected) {
 		selectedAlgorithm = selected;
@@ -21,5 +22,8 @@ public class AlgorithmManager
 		solution = img;
 	}
 	
+	public void setStartingPopulation(int num) {
+		population = new Population(num, solution.getWidth(), solution.getHeight());
+	}
 	
 }

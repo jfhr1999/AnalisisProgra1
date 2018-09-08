@@ -6,21 +6,17 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import geneticAlgorithm.AlgorithmManager;
-
+import javax.swing.event.ChangeListener;
+import javax.swing.event.ChangeEvent;
+import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorConvertOp;
 import java.io.File;
 import java.io.IOException;
-import java.awt.event.ActionEvent;
-import java.awt.BorderLayout;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Image;
-import javax.swing.event.ChangeListener;
-import javax.swing.event.ChangeEvent;
+
+import geneticAlgorithm.AlgorithmManager;
 
 public class AppWin extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -31,7 +27,7 @@ public class AppWin extends JFrame {
 	private JFileChooser imgChooser;
 	private GeneradorImagenes generador = new GeneradorImagenes();
 	private PixelReader pixelReader;
-	private AlgorithmManager algorithmManager;
+	private AlgorithmManager algorithmManager = new AlgorithmManager();
 	private int actualWidth = 0;
 	private int actualHeight = 0;
 	
@@ -47,7 +43,6 @@ public class AppWin extends JFrame {
 	// Algorithm Parameters
 	private JSlider sldr_startingPop;
 	private JLabel lbl_startingPopNum;
-	
 	
 	// Output 
 	private JLabel lbl_outputImg;
@@ -67,9 +62,8 @@ public class AppWin extends JFrame {
 		});
 	}
 
-	/**
-	 * Create the frame.
-	 */
+	
+	//Application Window Builder
 	public AppWin() {
 		setTitle("Proyecto 1 - Van Gogh Evolucional");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -90,34 +84,7 @@ public class AppWin extends JFrame {
 			public void actionPerformed(ActionEvent arg0) {
 				try {
 					if (pickSourceImg())
-					{
-
-						//grayscale checkbox
-						if (!chkbx_grayscale.isEnabled())
-							chkbx_grayscale.setEnabled(true);
-						else if (chkbx_grayscale.isSelected())
-							chkbx_grayscale.setSelected(false);
-						
-						//starting population slider & size label
-						if (!sldr_startingPop.isEnabled())
-							sldr_startingPop.setEnabled(true);
-						
-						float maxInitPop;
-						String sizeStr = "Tamaño: ";
-						if (sourceImg.getWidth() < actualWidth && sourceImg.getHeight() < actualHeight) {
-							sizeStr += sourceImg.getWidth() + "x" + sourceImg.getHeight() + "("+sourceImg.getWidth()*sourceImg.getHeight()+")";
-							maxInitPop = sourceImg.getWidth() * sourceImg.getHeight();
-						}
-						else {
-							sizeStr += actualWidth + "x" + actualHeight + "("+actualWidth*actualHeight+")";
-							maxInitPop = actualWidth * actualHeight;
-						}
-						maxInitPop = (maxInitPop/100)*25;
-						lbl_imgSize.setText(sizeStr);
-						sldr_startingPop.setMaximum((int) maxInitPop);
-						sldr_startingPop.setMinorTickSpacing((int) (maxInitPop-64)/10);
-						sldr_startingPop.setValue(64);
-					}
+						newSourceUpdateUI();
 				}
 				catch (Exception ex) {
 					ex.printStackTrace();
@@ -144,18 +111,10 @@ public class AppWin extends JFrame {
 		chkbx_grayscale.setEnabled(false);
 		chkbx_grayscale.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
-				try {
-					if (chkbx_grayscale.isSelected()) {
-						lbl_sourceImg.setIcon(new ImageIcon(grayscaleImg));
-					}
-					else {
-						lbl_sourceImg.setIcon(new ImageIcon(sourceImg));
-					}
-				}
-				catch(Exception ex) {
-					JOptionPane.showMessageDialog(rootPane, "Por favor, seleccione una imagen fuente.", "ERROR", JOptionPane.ERROR_MESSAGE);
-					chkbx_grayscale.setSelected(false);
-				}
+				if (chkbx_grayscale.isSelected())
+					lbl_sourceImg.setIcon(new ImageIcon(grayscaleImg));
+				else
+					lbl_sourceImg.setIcon(new ImageIcon(sourceImg));
 			}
 		});
 		chkbx_grayscale.setBounds(348, 352, 113, 25);
@@ -175,36 +134,10 @@ public class AppWin extends JFrame {
 		JPanel pnl_generalOptions = new JPanel();
 		tabPnl_conditions.addTab("General", null, pnl_generalOptions, null);
 		pnl_generalOptions.setLayout(null);
+		generalOptionsStartup(pnl_generalOptions);
 		
-		JLabel lbl_startingPop = new JLabel("Poblaci\u00F3n inicial:");
-		lbl_startingPop.setBounds(15, 15, 150, 20);
-		lbl_startingPop.setFont(fnt_normal);
-		pnl_generalOptions.add(lbl_startingPop);
-		
-		sldr_startingPop = new JSlider();
-		sldr_startingPop.setEnabled(false);
-		sldr_startingPop.setMaximum(164);
-		sldr_startingPop.setMinorTickSpacing(10);
-		sldr_startingPop.setValue(64);
-		sldr_startingPop.setMinimum(64);
-		sldr_startingPop.setPaintTicks(true);
-		sldr_startingPop.setPaintLabels(true);
-		sldr_startingPop.setBounds(25, 35, 300, 30);
-		sldr_startingPop.addChangeListener(new ChangeListener() {
-			public void stateChanged(ChangeEvent arg0) {
-				lbl_startingPopNum.setText(String.valueOf(sldr_startingPop.getValue()));
-			}
-		});
-		pnl_generalOptions.add(sldr_startingPop);
-		
-		
-		lbl_startingPopNum = new JLabel("0");
-		lbl_startingPopNum.setBounds(339, 35, 60, 30);
-		lbl_startingPopNum.setFont(fnt_normal);
-		pnl_generalOptions.add(lbl_startingPopNum);
-		
-		JPanel panel_1 = new JPanel();
-		tabPnl_conditions.addTab("New tab", null, panel_1, null);
+		JPanel pnl_paramOptions = new JPanel();
+		tabPnl_conditions.addTab("Parámetros", null, pnl_paramOptions, null);
 		
 		JButton btn_start = new JButton("Empezar");
 		btn_start.setBounds(668, 350, 100, 30);
@@ -212,7 +145,7 @@ public class AppWin extends JFrame {
 		btn_start.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
 				if (lbl_sourceImg.getIcon() != null)
-					generarImg();
+					generateImg();
 				else
 					JOptionPane.showMessageDialog(rootPane, "Por favor, seleccione una imagen fuente.", "ERROR", JOptionPane.ERROR_MESSAGE);
 			}
@@ -257,7 +190,110 @@ public class AppWin extends JFrame {
 		lbl_imgSize.setBounds(460, 352, 196, 25);
 		lbl_imgSize.setFont(fnt_normal);
 		mainPane.add(lbl_imgSize);
+		
+		JButton btn_info = new JButton("i");
+		btn_info.setBounds(757, 0, 30, 30);
+		btn_info.setBorder(new SoftBevelBorder(BevelBorder.RAISED, null, null, null, null));
+		btn_info.setFocusPainted(false);
+		btn_info.setOpaque(false);
+	    btn_info.setForeground(Color.BLUE);
+	    btn_info.setBackground(Color.WHITE);
+	    btn_info.setFont(fnt_title);
+		btn_info.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				aboutPopUp();
+			}
+		});
+		mainPane.add(btn_info);
 	}
+	
+	private void aboutPopUp()
+	{
+		String msg = "IC 3002 - Análisis de Algoritmos, GR 1"
+				+  "\nProfesor: José Carranza Rojas"
+				+"\n\nProyecto 1: Van Gogh Evolucional"
+				+  "\nElaborado por:"
+				+  "\n> 2017146886 = Carlos Roberto Esquivel Morales"
+				+  "\n> 2017###### = José Fabio Hidalgo Rodriguez"
+				+"\n\nSemestre 2, 2018";
+		JOptionPane.showMessageDialog(rootPane, msg, "About", JOptionPane.INFORMATION_MESSAGE);
+	}
+	
+	private void generalOptionsStartup(JPanel pnl)
+	{
+		JLabel lbl_startingPop = new JLabel("Poblaci\u00F3n inicial:");
+		lbl_startingPop.setBounds(15, 15, 150, 20);
+		lbl_startingPop.setFont(fnt_normal);
+		pnl.add(lbl_startingPop);
+		
+		sldr_startingPop = new JSlider();
+		sldr_startingPop.setEnabled(false);
+		sldr_startingPop.setMaximum(256);
+		sldr_startingPop.setMinorTickSpacing(16);
+		sldr_startingPop.setValue(64);
+		sldr_startingPop.setMinimum(16);
+		sldr_startingPop.setPaintTicks(true);
+		sldr_startingPop.setBounds(25, 35, 300, 30);
+		sldr_startingPop.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent arg0) {
+				lbl_startingPopNum.setText(String.valueOf(sldr_startingPop.getValue()));
+			}
+		});
+		pnl.add(sldr_startingPop);
+		
+		lbl_startingPopNum = new JLabel("64");
+		lbl_startingPopNum.setBounds(339, 35, 60, 30);
+		lbl_startingPopNum.setFont(fnt_normal);
+		pnl.add(lbl_startingPopNum);
+		
+		JLabel lbl_fitness = new JLabel("Algoritmo de aptitud:");
+		lbl_fitness.setBounds(15, 80, 200, 20);
+		lbl_fitness.setFont(fnt_normal);
+		pnl.add(lbl_fitness);
+		
+		JRadioButton rdbtn_Fit0 = new JRadioButton("Similitud Euclideana");
+		rdbtn_Fit0.setSelected(true);
+		rdbtn_Fit0.setBounds(15, 110, 200, 25);
+		rdbtn_Fit0.setFont(fnt_normal);
+		rdbtn_Fit0.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				algorithmManager.setFitnessAlgorithm(AlgorithmManager.FIT_Euclidean);
+			}
+		});
+		pnl.add(rdbtn_Fit0);
+		
+		JRadioButton rdbtn_Fit1 = new JRadioButton("Algoritmo 1");
+		rdbtn_Fit1.setBounds(15, 140, 200, 25);
+		rdbtn_Fit1.setFont(fnt_normal);
+		rdbtn_Fit1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				algorithmManager.setFitnessAlgorithm(AlgorithmManager.FIT_Algorithm1);
+			}
+		});
+		pnl.add(rdbtn_Fit1);
+		
+		JRadioButton rdbtn_Fit2 = new JRadioButton("Algoritmo 2");
+		rdbtn_Fit2.setBounds(15, 170, 200, 25);
+		rdbtn_Fit2.setFont(fnt_normal);
+		rdbtn_Fit2.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				algorithmManager.setFitnessAlgorithm(AlgorithmManager.FIT_Algorithm2);
+			}
+		});
+		pnl.add(rdbtn_Fit2);
+		
+		//Group the radio buttons.
+	    ButtonGroup FitnessBtns = new ButtonGroup();
+	    FitnessBtns.add(rdbtn_Fit0);
+	    FitnessBtns.add(rdbtn_Fit1);
+	    FitnessBtns.add(rdbtn_Fit2);
+	}
+	
+	/*
+	private void paramOptionsStartup(JPanel pnl)
+	{
+		
+	}//*/
 	
 	public boolean pickSourceImg() throws IOException
 	{
@@ -265,7 +301,7 @@ public class AppWin extends JFrame {
         if (imgChooser.showOpenDialog(null)==JFileChooser.APPROVE_OPTION) {
         	File file = imgChooser.getSelectedFile();
             BufferedImage newSourceImg = ImageIO.read(file);
-            if (newSourceImg.getWidth() >= 32 && newSourceImg.getHeight() >= 32) 
+            if (newSourceImg.getWidth() >= 16 && newSourceImg.getHeight() >= 16) 
             {
 	            actualWidth = newSourceImg.getWidth();
 	            actualHeight = newSourceImg.getHeight();
@@ -277,13 +313,34 @@ public class AppWin extends JFrame {
 	            result = true;
 	        }
             else {
-            	JOptionPane.showMessageDialog(rootPane, "El ancho y/o el largo de la imagen es menor a 32 pixeles. Las dimensiones mínimas son 32x32",
+            	JOptionPane.showMessageDialog(rootPane, "El ancho y/o el largo de la imagen es menor a 16 pixeles. Las dimensiones mínimas son 16x16",
             								  "ERROR - Imagen de tamaño inválido", JOptionPane.WARNING_MESSAGE);
             }
         }
         return result;
 	}
+	
+	public void newSourceUpdateUI()
+	{
+		//grayscale checkbox
+		if (!chkbx_grayscale.isEnabled())
+			chkbx_grayscale.setEnabled(true);
+		else if (chkbx_grayscale.isSelected())
+			chkbx_grayscale.setSelected(false);
 		
+		//starting population slider
+		if (!sldr_startingPop.isEnabled())
+			sldr_startingPop.setEnabled(true);
+		
+		//size label
+		String sizeStr = "Tamaño: ";
+		if (sourceImg.getWidth() < actualWidth && sourceImg.getHeight() < actualHeight)
+			sizeStr += sourceImg.getWidth() + "x" + sourceImg.getHeight();
+		else
+			sizeStr += actualWidth + "x" + actualHeight;
+		lbl_imgSize.setText(sizeStr);
+	}
+	
 	public BufferedImage resizeImg(int desiredWidth, int desiredHeight, BufferedImage img)
 	{
         if (img.getWidth() > img.getHeight())
@@ -310,7 +367,7 @@ public class AppWin extends JFrame {
 		return grayscaleImg;
 	}
 	
-	public void generarImg()
+	public void generateImg()
 	{
 		txt_pixelInfo.setText(null);
 		int width = sourceImg.getWidth(), 
@@ -323,5 +380,11 @@ public class AppWin extends JFrame {
 		pixelReader.processPixels(img);
 		img = resizeImg(320, 320, img);
 		lbl_outputImg.setIcon(new ImageIcon(img));
+	}
+	
+	public void startAlgorithm()
+	{
+		algorithmManager.setSolution(grayscaleImg);
+		algorithmManager.setStartingPopulation(sldr_startingPop.getValue());
 	}
 }
