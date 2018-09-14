@@ -1,4 +1,4 @@
-package generador;
+package application;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;

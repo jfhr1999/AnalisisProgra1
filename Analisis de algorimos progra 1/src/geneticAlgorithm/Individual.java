@@ -3,14 +3,20 @@ package geneticAlgorithm;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 
-import generador.GeneradorImagenes;
-
 public class Individual 
 {
-	private BufferedImage solution;
+	protected BufferedImage solution;
+	private int fitnessScore = 0;
 	
+	public int getFitnessScore() {
+		return fitnessScore;
+	}
+	public void setFitnessScore(int fitnessScore) {
+		this.fitnessScore = fitnessScore;
+	}
+
 	public Individual(int width, int height) {
-		GeneradorImagenes img = new GeneradorImagenes();
+		ImageGenerator img = new ImageGenerator();
 		solution = img.createImage(width, height);
 	}
 	

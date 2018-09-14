@@ -1,4 +1,4 @@
-package generador;
+package application;
 
 import java.awt.EventQueue;
 
@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 
 import geneticAlgorithm.AlgorithmManager;
+import geneticAlgorithm.ImageGenerator;
 
 public class AppWin extends JFrame {
 	private static final long serialVersionUID = 1L;
@@ -25,9 +26,10 @@ public class AppWin extends JFrame {
 	private static final Font fnt_normal = new Font("DialogInput", Font.PLAIN, 14);
 	private static final Font fnt_title = new Font("Consolas", Font.PLAIN, 16);
 	private JFileChooser imgChooser;
-	private GeneradorImagenes generador = new GeneradorImagenes();
+	private ImageGenerator generador = new ImageGenerator();
 	private PixelReader pixelReader;
-	private AlgorithmManager algorithmManager = new AlgorithmManager();
+	private AlgorithmManager algorithmManager = new AlgorithmManager(this);
+	private Thread algorithmThread;
 	private int actualWidth = 0;
 	private int actualHeight = 0;
 	
@@ -39,7 +41,7 @@ public class AppWin extends JFrame {
 	private BufferedImage grayscaleImg;
 	private JCheckBox chkbx_grayscale;
 	private JLabel lbl_imgSize;
-	
+	private JButton btn_start;
 	// Algorithm Parameters
 	private JSlider sldr_startingPop;
 	private JLabel lbl_startingPopNum;
@@ -139,7 +141,8 @@ public class AppWin extends JFrame {
 		JPanel pnl_paramOptions = new JPanel();
 		tabPnl_conditions.addTab("Parámetros", null, pnl_paramOptions, null);
 		
-		JButton btn_start = new JButton("Empezar");
+		btn_start = new JButton("Empezar");
+		btn_start.setEnabled(false);
 		btn_start.setBounds(668, 350, 100, 30);
 		btn_start.setFont(fnt_title );
 		btn_start.addActionListener(new ActionListener() {
@@ -158,7 +161,7 @@ public class AppWin extends JFrame {
 		mainPane.add(lbl_pixelInfo);
 		
 		JScrollPane pnl_pixelInfo = new JScrollPane();
-		pnl_pixelInfo.setBounds(352, 450, 416, 320);
+		pnl_pixelInfo.setBounds(352, 450, 416, 280);
 		mainPane.add(pnl_pixelInfo);
 		
 		txt_pixelInfo = new JTextArea();
@@ -205,6 +208,12 @@ public class AppWin extends JFrame {
 			}
 		});
 		mainPane.add(btn_info);
+		
+		JProgressBar progressBar = new JProgressBar();
+		progressBar.setStringPainted(true);
+		progressBar.setValue(20);
+		progressBar.setBounds(352, 740, 416, 30);
+		mainPane.add(progressBar);
 	}
 	
 	private void aboutPopUp()
@@ -322,6 +331,10 @@ public class AppWin extends JFrame {
 	
 	public void newSourceUpdateUI()
 	{
+		//start button
+		if (!btn_start.isEnabled())
+			btn_start.setEnabled(true);
+		
 		//grayscale checkbox
 		if (!chkbx_grayscale.isEnabled())
 			chkbx_grayscale.setEnabled(true);
@@ -378,13 +391,27 @@ public class AppWin extends JFrame {
 		}
 		BufferedImage img = generador.createImage(width, height);
 		pixelReader.processPixels(img);
-		img = resizeImg(320, 320, img);
-		lbl_outputImg.setIcon(new ImageIcon(img));
+		setOutputImg(img);
 	}
 	
 	public void startAlgorithm()
 	{
-		algorithmManager.setSolution(grayscaleImg);
+		AlgorithmManager.setMetaImg(grayscaleImg);
 		algorithmManager.setStartingPopulation(sldr_startingPop.getValue());
+		
+		setUIEnabled(false);
+		algorithmThread = new Thread(algorithmManager);
+		algorithmThread.start();
+	}
+	
+	public void setOutputImg(BufferedImage img)
+	{
+		img = resizeImg(320, 320, img);
+		lbl_outputImg.setIcon(new ImageIcon(img));
+	}
+	
+	public void setUIEnabled(boolean arg)
+	{
+		btn_start.setEnabled(arg);
 	}
 }
