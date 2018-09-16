@@ -19,9 +19,8 @@ public class Population
 		return indv.solution;
 	}
 	
-	protected void AssignFitnessScores(int selectedFunction) {
+	protected void AssignFitnessScores(BufferedImage metaImg, int selectedFunction) {
 		int fitnessScore = 0;
-		BufferedImage metaImg = AlgorithmManager.metaImg;
 		for (Individual indv : individuals)
 		{
 			switch(selectedFunction)
