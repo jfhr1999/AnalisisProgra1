@@ -2,6 +2,7 @@ package geneticAlgorithm;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 
 public class Individual 
 {
@@ -16,12 +17,17 @@ public class Individual
 	}
 
 	public Individual(int width, int height) {
-		ImageGenerator img = new ImageGenerator();
-		solution = img.createImage(width, height);
+		solution = new ImageHandler().createImage(width, height);
 	}
 	
 	public Individual(BufferedImage newImg) {
 		solution = newImg;
+	}
+	
+	public void resetSolution() {
+		int width = solution.getWidth(),
+			height = solution.getHeight();
+		solution = new ImageHandler().createImage(width, height);
 	}
 	
 	protected Color getPixelAt(int x, int y)
@@ -34,33 +40,34 @@ public class Individual
 	protected Individual crossover(Individual mate, int crossoverType)
 	{
 		BufferedImage imgOffspring = null;
-		ImageGenerator imgGenerator = new ImageGenerator();
+		ImageHandler imgHandler= new ImageHandler();
 		switch(crossoverType)
 		{
 		case(AlgorithmManager.CROSS_Hor):
-			imgOffspring = imgGenerator.crossover_horizontal(this, mate);
+			imgOffspring = imgHandler.crossover_horizontal(this, mate);
 			break;
 
 		case(AlgorithmManager.CROSS_Vert):
-			imgOffspring = imgGenerator.crossover_vertical(this, mate);
+			imgOffspring = imgHandler.crossover_vertical(this, mate);
 			break;
 
 		case(AlgorithmManager.CROSS_Quart):
-			imgOffspring = imgGenerator.crossover_quarts(this, mate);
+			imgOffspring = imgHandler.crossover_quarts(this, mate);
 			break;
 		}
 		Individual offspring = new Individual(imgOffspring);
 		return offspring;
 	}
 	
-	protected void mutatePixelAt(int x, int y)
+	protected void mutate(int maxPercentage)
 	{
-		int R = (int)(Math.random()*256);
-		int G = (int)(Math.random()*256);
-		int B = (int)(Math.random()*256);
-		int a = (int)(Math.random()*256);
-
-		int p = (R << 24) | (G<< 16) | (a << 8) | B;
-		solution.setRGB(x, y, p);
+		int geneTotal = solution.getWidth() * solution.getHeight();
+		int geneMin = (geneTotal/100) * 5,
+			geneMax = (geneTotal/100) * maxPercentage;
+		
+		int geneNum = new Random().nextInt(geneMax - geneMin) + geneMin;
+		//System.out.println(geneMin + " ~ " + geneMax + " :: "+ geneNum);
+		ImageHandler imgHandler = new ImageHandler();
+		solution = imgHandler.mutateImg(geneNum, solution);
 	}
 }
