@@ -81,7 +81,8 @@ public class AlgorithmManager implements Runnable
 		Timestamp ts = new Timestamp(date.getTime());
 		String output = ts.toString().replace('-', '_');
 		output = output.replace(':', '-');
-		return "src/output/" + output;
+		return  "/src/output/" + output;
+		
 	}
 	
 	private boolean stopCondition(int genNum, int fitHigh)

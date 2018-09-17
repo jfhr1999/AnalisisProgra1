@@ -248,7 +248,7 @@ public class AppWin extends JFrame {
 				+"\n\nProyecto 1: Van Gogh Evolucional"
 				+  "\nElaborado por:"
 				+  "\n> 2017146886 = Carlos Roberto Esquivel Morales"
-				+  "\n> 2017###### = José Fabio Hidalgo Rodriguez"
+				+  "\n> 2017100950 = José Fabio Hidalgo Rodriguez"
 				+"\n\nSemestre 2, 2018";
 		JOptionPane.showMessageDialog(rootPane, msg, "About", JOptionPane.INFORMATION_MESSAGE);
 	}
