@@ -1,16 +1,16 @@
 package geneticAlgorithm;
 
 import java.awt.image.*;
+import java.util.ArrayList;
 import java.util.Random;
 
-public class ImageGenerator {
+public class ImageHandler {
 	
 	public BufferedImage createImage(int width, int height) {
 		BufferedImage img = new BufferedImage(width, height,BufferedImage.TYPE_BYTE_GRAY);
 	    
 		byte [] imgData = ((DataBufferByte) img.getRaster().getDataBuffer()).getData();
 		byte [] randomData = new byte[imgData.length];
-		//generates random byte data
 		new Random().nextBytes(randomData);
 		
 		for (int i = 0; i < imgData.length; ++i)
@@ -101,5 +101,23 @@ public class ImageGenerator {
 			}
 		}
 		return newImg;
+	}
+	
+	protected BufferedImage mutateImg(int pixelNum, BufferedImage img)
+	{
+		byte [] imgData = ((DataBufferByte) img.getRaster().getDataBuffer()).getData(),
+				randomData = new byte[pixelNum];
+		new Random().nextBytes(randomData);
+		
+		int randomIndx;
+		ArrayList<Integer> mutatedIndxs = new ArrayList<Integer>();
+		for (byte randomPixel : randomData) {
+			randomIndx = new Random().nextInt(imgData.length);
+			if (mutatedIndxs.indexOf(randomIndx) < 0) {
+				imgData[randomIndx] = randomPixel;
+				mutatedIndxs.add(randomIndx);
+			}
+		}
+		return img;
 	}
 }

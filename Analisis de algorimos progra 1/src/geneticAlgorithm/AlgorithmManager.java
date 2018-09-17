@@ -1,7 +1,5 @@
 package geneticAlgorithm;
 
-import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -30,19 +28,31 @@ public class AlgorithmManager implements Runnable
 	public static final int CROSS_Quart = 2;
 	
 	//END CONDITION
-	private int generationTotal = 20;
+	private int generationTotal = -1;
 	private int fitnessMin = -1;
 	
 	private int selectedAlgorithm = 0;
 	private int selectedCrossover = 0;
+
 	private BufferedImage metaImg;
-	private Population population = new Population();
+	private Population population;
+	private boolean manualStop = false;
 	
+	public void manualStop() {
+		manualStop = true;
+	}
 	public void setGenTotal(int pTotal) {
 		generationTotal = pTotal;
 	}
 	public void setFitnessMin(int pMin) {
 		fitnessMin = pMin;
+	}
+	
+	public void setGenePercentage(int pPerc) {
+		population.maxGenePerc = pPerc;
+	}
+	public void setIndvPercentage(int pPerc) {
+		population.individualPerc = pPerc;
 	}
 	
 	public void setFitnessAlgorithm(int selected) {
@@ -62,6 +72,7 @@ public class AlgorithmManager implements Runnable
 
 	public AlgorithmManager(AppWin pApp) {
 		Application = pApp;
+		population = new Population();
 	}
 	
 	private String outputFolderName()
@@ -73,55 +84,59 @@ public class AlgorithmManager implements Runnable
 		return "src/output/" + output;
 	}
 	
-	private boolean stopCondition(int arg)
+	private boolean stopCondition(int genNum, int fitHigh)
 	{
 		boolean out = false;
-		if ((generationTotal > 0 && arg >= generationTotal) ||
-			(fitnessMin > 0 && arg >= fitnessMin))
+		if ((generationTotal > 0 && genNum >= generationTotal) ||
+			(fitnessMin > 0 && fitHigh >= fitnessMin))
 			out = true;
 		return out;
 	}
 	
-	private void updateProgressBar(int arg)
+	private void updateProgressBar(int genNum, int fitHigh)
 	{
 		float out;
 		if (generationTotal > 0)
-			out = (arg/ (float) generationTotal)*100;
+			out = (genNum/ (float) generationTotal)*100;
 		else
-			out = (arg/ (float) fitnessMin)*100;
+			out = (fitHigh/ (float) fitnessMin)*100;
 		Application.updateProgressBar((int) out);
 	}
 	
 	@Override
 	public void run() {
-		int highIndx;
 		BufferedImage outputImg;
-		File outputFile;
-		String outputFolder = outputFolderName(),
-			   fileName;
+		String outputFolder = outputFolderName();
 		new File(outputFolder).mkdir();
 		try {
-			int i = 1;
-			while (!stopCondition(i))
+			int genNum = 0,
+				fitHigh = 0;
+			float genPerc;
+			while (!stopCondition(genNum, fitHigh) && !manualStop)
 			{
 				population.AssignFitnessScores(metaImg, selectedAlgorithm);
-				highIndx = population.getHighestIndex();
-				if (generationTotal > 0) {
-					fileName = "Generation"+i+".png";
-					i++;
-				}
-				else {
-					i = population.individuals.get(highIndx).getFitnessScore();
-					fileName = "Fitness"+i+"png";
-				}
-				outputImg = population.getImgAt(highIndx);
-				outputFile = new File(outputFolder + fileName);
-				ImageIO.write(outputImg, "png", outputFile);
+				population.sortFitness();
+				fitHigh = population.individuals.get(0).getFitnessScore();
+				outputImg = population.getImgAt(0);
 				Application.setOutputImg(outputImg);
-				updateProgressBar(i);
+
+				updateProgressBar(genNum, fitHigh);
+				genPerc = (genNum/ (float) generationTotal)*100;
+				if ((generationTotal > 0 && (genPerc%10 ==  0) ) ||
+					(fitnessMin > 0 && (genNum%500 == 0)))
+					writeFile(outputFolder, outputImg, genNum, fitHigh);
+				genNum++;
+				
+				population.crossover(selectedCrossover);
+				population.mutate();
 			}
+			if (manualStop)
+				manualStop = false;
+			outputImg = population.getImgAt(0);
+			Application.writeMsg("\nFINAL - - -");
+			writeFile(outputFolder, outputImg, genNum, fitHigh);
 		}
-		catch(IOException e) {
+		catch(Exception e) {
 			JOptionPane.showMessageDialog(Application, "Error al guardar la imagen", "ERROR - Algoritmo Genético", JOptionPane.ERROR_MESSAGE);
 		}
 		finally {
@@ -129,42 +144,21 @@ public class AlgorithmManager implements Runnable
 		}
 	}
 	
-	//CROSSOVER TEST
-	public void crossoverTest() {
-		BufferedImage flippedImg = createRotated(metaImg);
-		
-		Individual male = new Individual(metaImg),
-				   female = new Individual(flippedImg);
-		
-		Individual offspring = male.crossover(female, selectedCrossover);
-		String outputFolder = outputFolderName();
-		System.out.println(outputFolder);
-		new File(outputFolder).mkdir();
-		try {
-			ImageIO.write(offspring.solution, "png", new File(outputFolder + "/test.png"));
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		Application.setOutputImg(offspring.solution);
+	/*	Por Generacion: se imprime file cada que se pase un 10% del progreso (10 imagenes en total)
+	 * 	Por Aptitud: se imprime file cada 500 generaciones
+	 * 
+	 */
+	private void writeFile(String outputFolder, BufferedImage outputImg, int genNum, int fitHigh) throws IOException 
+	{
+		String fileName = "/Gen"+genNum+" - Fitness "+fitHigh+".png";
+		File outputFile = new File(outputFolder + fileName);
+		ImageIO.write(outputImg, "png", outputFile);
+
+		String msgOutput = "\n> Gen. "+String.valueOf(genNum) +
+						   "\n     Aptitud Máx: "+String.valueOf(fitHigh) +
+						   "\n     Aptitud Media: "+String.valueOf(population.fitnessAvg)+
+						   "\n     Directorio de archivo: "+outputFolder+fileName;
+		Application.writeMsg(msgOutput);
 	}
 	
-    private BufferedImage createRotated(BufferedImage image)
-    {
-        AffineTransform at = AffineTransform.getRotateInstance(
-            Math.PI, image.getWidth()/2, image.getHeight()/2.0);
-        return createTransformed(image, at);
-    }
-
-    private BufferedImage createTransformed(
-        BufferedImage image, AffineTransform at)
-    {
-        BufferedImage newImage = new BufferedImage(
-            image.getWidth(), image.getHeight(),
-            BufferedImage.TYPE_BYTE_GRAY);
-        Graphics2D g = newImage.createGraphics();
-        g.transform(at);
-        g.drawImage(image, 0, 0, null);
-        g.dispose();
-        return newImage;
-    }
 }

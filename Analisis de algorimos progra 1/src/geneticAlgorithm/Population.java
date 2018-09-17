@@ -1,16 +1,25 @@
 package geneticAlgorithm;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Random;
 
 public class Population 
 {
 	protected ArrayList<Individual> individuals = null;
-
+	protected float fitnessAvg;
+	
+	//MUTATION PARAMETERS
+	protected int maxGenePerc;
+	protected int individualPerc;
+	
 	protected void setStartingPopulation(int startingPop, int width, int height) {
 		individuals = new ArrayList<Individual>();
-		for (int i = 0; i < startingPop; i++)
+		for (int i = 0; i < startingPop; i++) {
 			individuals.add(new Individual(width, height));
+			individuals.get(i).setFitnessScore(i);
+		}
 	}
 	
 	protected BufferedImage getImgAt(int index)
@@ -19,11 +28,12 @@ public class Population
 		return indv.solution;
 	}
 	
-	protected void AssignFitnessScores(BufferedImage metaImg, int selectedFunction) {
-		int fitnessScore = 0;
+	protected void AssignFitnessScores(BufferedImage metaImg, int selectedAlgorithm) {
+		int fitnessScore = 0,
+			fitnessSum = 0;
 		for (Individual indv : individuals)
 		{
-			switch(selectedFunction)
+			switch(selectedAlgorithm)
 			{
 			case(AlgorithmManager.FIT_Euclidean):
 				fitnessScore = EuclideanFitness(indv, metaImg);
@@ -38,12 +48,33 @@ public class Population
 				break;
 			}
 			indv.setFitnessScore(fitnessScore);
+			fitnessSum += fitnessScore;
 		}
+		fitnessAvg = fitnessSum / (float) individuals.size();
 	}
 	
 	private int EuclideanFitness(Individual indv, BufferedImage metaImg) 
 	{
-		return 0;
+		int width = metaImg.getWidth(),
+			height = metaImg.getHeight(),
+			indvPixelVal, metaPixelVal,
+			fitness;
+		Color indvPixel, metaPixel;
+		double sum = 0;
+		for (int y = 0; y < height; ++y)
+		{
+			for (int x = 0; x < width; ++x)
+			{
+				indvPixel = indv.getPixelAt(x, y);
+				indvPixelVal = indvPixel.getBlue();
+				metaPixel = new Color(metaImg.getRGB(x, y));
+				metaPixelVal = metaPixel.getBlue();
+				sum += (indvPixelVal - metaPixelVal)*(indvPixelVal - metaPixelVal);
+			}
+		}
+		Math.sqrt(sum);
+		fitness = (int) ((sum / (width*height)) / 1000);
+		return fitness;
 	}
 	
 	private int Fitness1(Individual indv)
@@ -56,18 +87,65 @@ public class Population
 		return 0;
 	}
 	
-	protected int getHighestIndex()
+	//bubble sort, ordena de mayor a menor
+	protected void sortFitness()
 	{
-		int index = 0,
-			maxFitness = 0;
-		Individual indv;
-		for (int i = 0; i < individuals.size(); ++i) {
-			indv = individuals.get(i);
-			if (maxFitness < indv.getFitnessScore()) {
-				maxFitness = indv.getFitnessScore();
-				index = i;
+		boolean change = true;
+		Individual tmp;
+		for (int j = individuals.size(); j > 0 && change; --j)
+		{
+			change = false;
+			for (int i = 0; i < j-1; ++i)
+			{
+				if (individuals.get(i).getFitnessScore() < individuals.get(i+1).getFitnessScore())
+				{
+					change = true;
+					tmp = individuals.get(i);
+					individuals.set(i, individuals.get(i+1));
+					individuals.set(i+1, tmp);
+				}
 			}
 		}
-		return index;
+	}
+	
+	protected void crossover(int type)
+	{
+		int maxIndx = individuals.size()/2;
+		Individual male, female;
+		ArrayList<Individual> newGen = new ArrayList<Individual>();
+		Random r = new Random();
+		int j;
+		for (int i = 0; i < maxIndx; i++)
+		{
+			male = individuals.get(i);
+			j = r.nextInt(individuals.size());
+			female = individuals.get(j);
+			if (female.getFitnessScore() > fitnessAvg) {
+				newGen.add(male.crossover(female, type));
+				newGen.add(female.crossover(male, type));
+			}
+			else
+				--i;
+		}
+		individuals = newGen;
+		//System.out.println("New Generation size: "+individuals.size());
+	}
+	
+	protected int mutate()
+	{
+		int chance,
+			mutated = 0;
+		for (Individual indv : individuals)
+		{
+			chance = new Random().nextInt(100)+1;
+			if (chance <= individualPerc) {
+				if (chance > 5)
+					indv.mutate(maxGenePerc);
+				else
+					indv.resetSolution();
+				mutated++;
+			}
+		}
+		return mutated;
 	}
 }
