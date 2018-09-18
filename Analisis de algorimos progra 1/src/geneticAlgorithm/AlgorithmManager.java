@@ -19,8 +19,8 @@ public class AlgorithmManager implements Runnable
 	
 	//FITNESS ALGORITHMS
 	public static final int FIT_Euclidean = 0;
-	public static final int FIT_Algorithm1 = 1;
-	public static final int FIT_Algorithm2 = 2;
+	public static final int FIT_Manhattan = 1;
+	public static final int FIT_Custom = 2;
 	
 	//CROSSOVER TYPES
 	public static final int CROSS_Hor = 0;
@@ -63,11 +63,11 @@ public class AlgorithmManager implements Runnable
 		case(FIT_Euclidean):
 			algorithm = "Similitud Euclideana";
 			break;
-		case(FIT_Algorithm1):
-			algorithm = "Algorithm1";
+		case(FIT_Manhattan):
+			algorithm = "Algoritmo Manhattan";
 			break;
-		case(FIT_Algorithm2):
-			algorithm = "Algorithm2";
+		case(FIT_Custom):
+			algorithm = "Algoritmo Personalizado";
 			break;
 		}
 		return algorithm;
@@ -118,7 +118,6 @@ public class AlgorithmManager implements Runnable
 		String output = ts.toString().replace('-', '_');
 		output = output.replace(':', '-');
 		return  "/src/output/" + output;
-		
 	}
 	
 	private boolean stopCondition(int genNum, int fitHigh)
@@ -156,6 +155,7 @@ public class AlgorithmManager implements Runnable
 				fitHigh = population.individuals.get(0).getFitnessScore();
 				outputImg = population.getImgAt(0);
 				Application.setOutputImg(outputImg);
+				Application.setGeneration(genNum);
 
 				updateProgressBar(genNum, fitHigh);
 				genPerc = (genNum/ (float) generationTotal)*100;
@@ -172,8 +172,11 @@ public class AlgorithmManager implements Runnable
 			outputImg = population.getImgAt(0);
 			Application.writeMsg("\nFINAL - - -");
 			writeFile(outputFolder, outputImg, genNum, fitHigh);
+			Application.setOutputImg(outputImg);
+			Application.setGeneration(genNum);
 		}
 		catch(Exception e) {
+			e.printStackTrace();
 			JOptionPane.showMessageDialog(Application, "Error al guardar la imagen", "ERROR - Algoritmo Genético", JOptionPane.ERROR_MESSAGE);
 		}
 		finally {
@@ -183,7 +186,6 @@ public class AlgorithmManager implements Runnable
 	
 	/*	Por Generacion: se imprime file cada que se pase un 10% del progreso (10 imagenes en total)
 	 * 	Por Aptitud: se imprime file cada 500 generaciones
-	 * 
 	 */
 	private void writeFile(String outputFolder, BufferedImage outputImg, int genNum, int fitHigh) throws IOException 
 	{

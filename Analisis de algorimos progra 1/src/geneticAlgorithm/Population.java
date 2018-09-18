@@ -8,7 +8,7 @@ import java.util.Random;
 public class Population 
 {
 	protected ArrayList<Individual> individuals = null;
-	protected float fitnessAvg;
+	protected int fitnessAvg;
 	
 	//MUTATION PARAMETERS
 	protected int maxGenePerc;
@@ -39,18 +39,18 @@ public class Population
 				fitnessScore = EuclideanFitness(indv, metaImg);
 				break;
 			
-			case(AlgorithmManager.FIT_Algorithm1):
-				fitnessScore = ManhatthanFitness(indv,metaImg);
+			case(AlgorithmManager.FIT_Manhattan):
+				fitnessScore = ManhattanFitness(indv, metaImg);
 				break;
 			
-			case(AlgorithmManager.FIT_Algorithm2):
+			case(AlgorithmManager.FIT_Custom):
 				fitnessScore = Fitness2(indv,metaImg);
 				break;
 			}
 			indv.setFitnessScore(fitnessScore);
 			fitnessSum += fitnessScore;
 		}
-		fitnessAvg = fitnessSum / (float) individuals.size();
+		fitnessAvg = (int) (fitnessSum / (float) individuals.size());
 	}
 	
 	private int EuclideanFitness(Individual indv, BufferedImage metaImg) 
@@ -58,9 +58,8 @@ public class Population
 		int width = metaImg.getWidth(),
 			height = metaImg.getHeight(),
 			indvPixelVal, metaPixelVal,
-			fitness;
+			fitness, sum = 0;
 		Color indvPixel, metaPixel;
-		double sum = 0;
 		for (int y = 0; y < height; ++y)
 		{
 			for (int x = 0; x < width; ++x)
@@ -77,58 +76,60 @@ public class Population
 		return fitness;
 	}
 	
-	private int ManhatthanFitness(Individual indv, BufferedImage metaImg)
+	private int ManhattanFitness(Individual indv, BufferedImage metaImg)
 	{
 		int width = metaImg.getWidth(),
-				height = metaImg.getHeight(),
-				indvPixelVal, metaPixelVal,
-				fitness;
-			Color indvPixel, metaPixel;
-			double sum = 0;
-			for (int y = 0; y < height; ++y)
+			height = metaImg.getHeight(),
+			indvPixelVal, metaPixelVal,
+			fitness,
+			sum = 0;
+		Color indvPixel, metaPixel;
+		for (int y = 0; y < height; ++y)
+		{
+			for (int x = 0; x < width; ++x)
 			{
-				for (int x = 0; x < width; ++x)
-				{
-					indvPixel = indv.getPixelAt(x, y);
-					indvPixelVal = indvPixel.getBlue();
-					metaPixel = new Color(metaImg.getRGB(x, y));
-					metaPixelVal = metaPixel.getBlue();
-					sum += Math.abs(indvPixelVal - metaPixelVal);
-				}
+				indvPixel = indv.getPixelAt(x, y);
+				indvPixelVal = indvPixel.getBlue();
+				metaPixel = new Color(metaImg.getRGB(x, y));
+				metaPixelVal = metaPixel.getBlue();
+				sum += Math.abs(indvPixelVal - metaPixelVal);
 			}
-			fitness = (int) ((sum / (width*height)) / 10000000);
-			return fitness;
+		}
+		fitness = 100 - (sum / (width*height));
+		return fitness;
 	}
 	
 	private int Fitness2(Individual indv, BufferedImage metaImage)
 	{
 		int width = metaImage.getWidth(),
-				height = metaImage.getHeight(),MicroDet = 0, a,b,c,d;
-		Color aInv,bInv,cInv,dInv,aMeta,bMeta,cMeta,dMeta;
-		double tot = 0, total = 0;
-		for (int y = 0; y < height; ++y)
+			height = metaImage.getHeight(),
+			MicroDet = 0, a,b,c,d,
+			sum = 0, fitness;
+		Color aIndv, bIndv, cIndv, dIndv,
+			  aMeta, bMeta, cMeta, dMeta;
+		for (int y = 0; y < (height-1); ++y)
 		{
-			for (int x = 0; x < width; ++x)
+			for (int x = 0; x < (width-1); ++x)
 			{
-				aInv = indv.getPixelAt(x, y);aMeta = new Color(metaImage.getRGB(x, y));
-				bInv = indv.getPixelAt(x+1, y);bMeta = new Color(metaImage.getRGB(x+1, y));
-				cInv = indv.getPixelAt(x, y+1);cMeta = new Color(metaImage.getRGB(x, y + 1));
-				dInv = indv.getPixelAt(x+1, y+1);dMeta = new Color(metaImage.getRGB(x+1, y+1));
+				aIndv = indv.getPixelAt(x, y);		aMeta = new Color(metaImage.getRGB(x, y));
+				bIndv = indv.getPixelAt(x+1, y);	bMeta = new Color(metaImage.getRGB(x+1, y));
+				cIndv = indv.getPixelAt(x, y+1);	cMeta = new Color(metaImage.getRGB(x, y + 1));
+				dIndv = indv.getPixelAt(x+1, y+1);	dMeta = new Color(metaImage.getRGB(x+1, y+1));
 				
-				a = aInv.getBlue() - aMeta.getBlue();
-				b = bInv.getBlue() - bMeta.getBlue();
-				c = cInv.getBlue() - cMeta.getBlue();
-				d = dInv.getBlue() - dMeta.getBlue();
+				a = aIndv.getBlue() - aMeta.getBlue();
+				b = bIndv.getBlue() - bMeta.getBlue();
+				c = cIndv.getBlue() - cMeta.getBlue();
+				d = dIndv.getBlue() - dMeta.getBlue();
 				
 				MicroDet = (a*c) - (b*d);
 				
-				tot = tot + Math.abs(MicroDet);
+				sum += Math.abs(MicroDet);
 			}
 		}
-		double div = metaImage.getHeight()/2;
-		total = (int)(tot/Math.pow(10, div + 1));
-		
-		return (int) total;
+		double div = height/2;
+		fitness =(int) (sum/Math.pow(10, div + 1));
+		System.out.println(fitness);
+		return fitness;
 	}
 	
 	//bubble sort, ordena de mayor a menor

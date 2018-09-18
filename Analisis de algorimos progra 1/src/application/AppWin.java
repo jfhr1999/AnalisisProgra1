@@ -39,6 +39,9 @@ public class AppWin extends JFrame {
 	private BufferedImage grayscaleImg;
 	private JCheckBox chkbx_grayscale;
 	
+	// Parameters
+	private int selectedFitness = 0;
+	private int selectedCrossover = 0;
 	private JSlider sldr_populationSize;
 	private JSlider sldr_genNum;
 	private JSlider sldr_fitMin;
@@ -50,6 +53,7 @@ public class AppWin extends JFrame {
 
 	// Output 
 	private JLabel lbl_outputImg;
+	private JLabel lbl_generation;
 	private JTextArea txt_appConsole;
 	private JProgressBar progressBar;
 	
@@ -240,6 +244,11 @@ public class AppWin extends JFrame {
 		mainPane.add(lbl_execTime);
 		
 		timer = new Timer(lbl_execTime);
+		
+		lbl_generation = new JLabel("Generacion: --");
+		lbl_generation.setBounds(20, 771, 320, 16);
+		lbl_generation.setFont(fnt_normal);
+		mainPane.add(lbl_generation);
 	}
 	
 	private void aboutPopUp()
@@ -294,27 +303,27 @@ public class AppWin extends JFrame {
 		rdbtn_Fit0.setFont(fnt_normal);
 		rdbtn_Fit0.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				algorithmManager.setFitnessAlgorithm(AlgorithmManager.FIT_Euclidean);
+				selectedFitness = AlgorithmManager.FIT_Euclidean;
 			}
 		});
 		pnl.add(rdbtn_Fit0);
 		
-		JRadioButton rdbtn_Fit1 = new JRadioButton("Algoritmo 1");
+		JRadioButton rdbtn_Fit1 = new JRadioButton("Algoritmo Manhattan");
 		rdbtn_Fit1.setBounds(15, 140, 200, 25);
 		rdbtn_Fit1.setFont(fnt_normal);
 		rdbtn_Fit1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				algorithmManager.setFitnessAlgorithm(AlgorithmManager.FIT_Algorithm1);
+				selectedFitness = AlgorithmManager.FIT_Manhattan;
 			}
 		});
 		pnl.add(rdbtn_Fit1);
 		
-		JRadioButton rdbtn_Fit2 = new JRadioButton("Algoritmo 2");
-		rdbtn_Fit2.setBounds(15, 170, 200, 25);
+		JRadioButton rdbtn_Fit2 = new JRadioButton("Algoritmo Personalizado");
+		rdbtn_Fit2.setBounds(15, 170, 220, 25);
 		rdbtn_Fit2.setFont(fnt_normal);
 		rdbtn_Fit2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				algorithmManager.setFitnessAlgorithm(AlgorithmManager.FIT_Algorithm2);
+				selectedFitness = AlgorithmManager.FIT_Custom;
 			}
 		});
 		pnl.add(rdbtn_Fit2);
@@ -338,7 +347,7 @@ public class AppWin extends JFrame {
 		rdbtn_Cross0.setFont(fnt_normal);
 		rdbtn_Cross0.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				algorithmManager.setCrossoverType(AlgorithmManager.CROSS_Hor);
+				selectedCrossover = AlgorithmManager.CROSS_Hor;
 			}
 		});
 		pnl.add(rdbtn_Cross0);
@@ -348,7 +357,7 @@ public class AppWin extends JFrame {
 		rdbtn_Cross1.setFont(fnt_normal);
 		rdbtn_Cross1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				algorithmManager.setCrossoverType(AlgorithmManager.CROSS_Vert);
+				selectedCrossover = AlgorithmManager.CROSS_Vert;
 			}
 		});
 		pnl.add(rdbtn_Cross1);
@@ -358,7 +367,7 @@ public class AppWin extends JFrame {
 		rdbtn_Cross2.setFont(fnt_normal);
 		rdbtn_Cross2.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				algorithmManager.setCrossoverType(AlgorithmManager.CROSS_Quart);
+				selectedCrossover = AlgorithmManager.CROSS_Quart;
 			}
 		});
 		pnl.add(rdbtn_Cross2);
@@ -421,7 +430,6 @@ public class AppWin extends JFrame {
 		sldr_fitMin.setMinorTickSpacing(1);
 		sldr_fitMin.setMajorTickSpacing(5);
 		sldr_fitMin.setMinimum(60);
-		sldr_fitMin.setMaximum(95);
 		sldr_fitMin.setValue(70);
 		sldr_fitMin.setPaintTicks(true);
 		sldr_fitMin.setBounds(25, 160, 300, 30);
@@ -524,7 +532,7 @@ public class AppWin extends JFrame {
         if (imgChooser.showOpenDialog(null)==JFileChooser.APPROVE_OPTION) {
         	File file = imgChooser.getSelectedFile();
             BufferedImage newSourceImg = ImageIO.read(file);
-            if (newSourceImg.getWidth() >= 16 && newSourceImg.getHeight() >= 16) 
+            if (newSourceImg.getWidth() >= 8 && newSourceImg.getHeight() >= 8) 
             {
 	            actualWidth = newSourceImg.getWidth();
 	            actualHeight = newSourceImg.getHeight();
@@ -536,7 +544,7 @@ public class AppWin extends JFrame {
 	            result = true;
 	        }
             else {
-            	JOptionPane.showMessageDialog(rootPane, "El ancho y/o el largo de la imagen es menor a 16 pixeles. Las dimensiones mínimas son 16x16",
+            	JOptionPane.showMessageDialog(rootPane, "El ancho y/o el largo de la imagen es menor a 8 pixeles. Las dimensiones mínimas son 8x8",
             								  "ERROR - Imagen de tamaño inválido", JOptionPane.WARNING_MESSAGE);
             }
         }
@@ -599,41 +607,50 @@ public class AppWin extends JFrame {
 		txt_appConsole.setText("\t= = = = = = =  = = = = = = ="
 						   + "\n\t= = COMENZANDO ALGORITMO = ="
 						   + "\n\t= = = = = = =  = = = = = = =");
-		
-		
-		
+		String parameterStr = "\n## PARAMETROS: ";
+
+		//Dimensiones de imagen
 		int width = sourceImg.getWidth(), 
 			height = sourceImg.getHeight();
 		if (width > actualWidth && height > actualHeight) {
 			width = actualWidth;
 			height = actualHeight;
 		}
-		
 		BufferedImage metaImg = getGrayscale(resizeImg(width, height, sourceImg));
 		algorithmManager.setMetaImg(metaImg);
-		
-		String parameterStr = "\n## PARAMETROS: ";
+		parameterStr += "\n# > Dimensiones de imagen: "+String.valueOf(width)+"x"+String.valueOf(height);
 
+		//Tamaño de poblacion
 		int popSize = sldr_populationSize.getValue();
 		algorithmManager.setPopulationSize(popSize);
-		parameterStr += "\n# > Tamaño de poblacion: "+String.valueOf(popSize) +
-						"\n# > Algoritmo de aptitud: "+algorithmManager.getFitnessAlgorithm() +
-						"\n# > Tipo de cruce: "+algorithmManager.getCrossoverType() +
+		parameterStr += "\n# > Tamaño de poblacion: "+String.valueOf(popSize);
+		
+		//Algoritmo de aptitud
+		algorithmManager.setFitnessAlgorithm(selectedFitness);
+		parameterStr += "\n# > Algoritmo de aptitud: "+algorithmManager.getFitnessAlgorithm();
+		
+		//Tipo de cruce
+		algorithmManager.setCrossoverType(selectedCrossover);
+		parameterStr += "\n# > Tipo de cruce: "+algorithmManager.getCrossoverType() +
 						"\n# > Condición de parada: ";
 		
+		//Condicion de parada
 		if (sldr_genNum.isEnabled()) {
+			//por numero de generaciones
 			int genNum = sldr_genNum.getValue();
 			algorithmManager.setGenTotal(genNum);
 			algorithmManager.setFitnessMin(-1);
 			parameterStr += "Pasadas "+String.valueOf(genNum)+" generaciones";
 		}
 		else {
+			//por aptitud minima
 			int fitMin = sldr_fitMin.getValue();
 			algorithmManager.setFitnessMin(fitMin);
 			algorithmManager.setGenTotal(-1);
-			parameterStr += "Mínimo "+String.valueOf(fitMin)+" de puntaje de aptitud";
+			parameterStr += "Aptitud mínima de "+String.valueOf(fitMin);
 		}
 		
+		//mutaciones
 		int genePerc = sldr_genePerc.getValue(),
 			indvPerc =sldr_indvPerc.getValue();
 		algorithmManager.setGenePercentage(genePerc);
@@ -673,5 +690,9 @@ public class AppWin extends JFrame {
 	
 	public void writeMsg(String msg) {
 		txt_appConsole.append(msg + "\n");
+	}
+	
+	public void setGeneration(int gen) {
+		lbl_generation.setText("Generacion: "+String.valueOf(gen));
 	}
 }

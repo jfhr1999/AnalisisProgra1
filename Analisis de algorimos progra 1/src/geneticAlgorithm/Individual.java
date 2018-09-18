@@ -62,8 +62,8 @@ public class Individual
 	protected void mutate(int maxPercentage)
 	{
 		int geneTotal = solution.getWidth() * solution.getHeight();
-		int geneMin = (geneTotal/100) * 5,
-			geneMax = (geneTotal/100) * maxPercentage;
+		int geneMin = (int) ((geneTotal/100.0) * 5),
+			geneMax = (int) ((geneTotal/100.0) * maxPercentage);
 		
 		int geneNum = new Random().nextInt(geneMax - geneMin) + geneMin;
 		//System.out.println(geneMin + " ~ " + geneMax + " :: "+ geneNum);
