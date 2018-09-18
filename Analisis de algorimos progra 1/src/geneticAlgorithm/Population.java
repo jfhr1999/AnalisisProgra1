@@ -44,7 +44,7 @@ public class Population
 				break;
 			
 			case(AlgorithmManager.FIT_Algorithm2):
-				fitnessScore = Fitness2(indv);
+				fitnessScore = Fitness2(indv,metaImg);
 				break;
 			}
 			indv.setFitnessScore(fitnessScore);
@@ -100,9 +100,35 @@ public class Population
 			return fitness;
 	}
 	
-	private int Fitness2(Individual indv)
+	private int Fitness2(Individual indv, BufferedImage metaImage)
 	{
-		return 0;
+		int width = metaImage.getWidth(),
+				height = metaImage.getHeight(),MicroDet = 0, a,b,c,d;
+		Color aInv,bInv,cInv,dInv,aMeta,bMeta,cMeta,dMeta;
+		double tot = 0, total = 0;
+		for (int y = 0; y < height; ++y)
+		{
+			for (int x = 0; x < width; ++x)
+			{
+				aInv = indv.getPixelAt(x, y);aMeta = new Color(metaImage.getRGB(x, y));
+				bInv = indv.getPixelAt(x+1, y);bMeta = new Color(metaImage.getRGB(x+1, y));
+				cInv = indv.getPixelAt(x, y+1);cMeta = new Color(metaImage.getRGB(x, y + 1));
+				dInv = indv.getPixelAt(x+1, y+1);dMeta = new Color(metaImage.getRGB(x+1, y+1));
+				
+				a = aInv.getBlue() - aMeta.getBlue();
+				b = bInv.getBlue() - bMeta.getBlue();
+				c = cInv.getBlue() - cMeta.getBlue();
+				d = dInv.getBlue() - dMeta.getBlue();
+				
+				MicroDet = (a*c) - (b*d);
+				
+				tot = tot + Math.abs(MicroDet);
+			}
+		}
+		double div = metaImage.getHeight()/2;
+		total = (int)(tot/Math.pow(10, div + 1));
+		
+		return (int) total;
 	}
 	
 	//bubble sort, ordena de mayor a menor

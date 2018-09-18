@@ -1,12 +1,12 @@
 package geneticAlgorithm;
 
 import java.awt.image.BufferedImage;
-import java.io.File;
+//import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import javax.imageio.ImageIO;
+//import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
 import application.AppWin;
@@ -144,7 +144,7 @@ public class AlgorithmManager implements Runnable
 	public void run() {
 		BufferedImage outputImg;
 		String outputFolder = outputFolderName();
-		new File(outputFolder).mkdir();
+		//new File(outputFolder).mkdir();
 		try {
 			int genNum = 0,
 				fitHigh = 0;
@@ -188,7 +188,7 @@ public class AlgorithmManager implements Runnable
 	private void writeFile(String outputFolder, BufferedImage outputImg, int genNum, int fitHigh) throws IOException 
 	{
 		String fileName = "/Gen"+genNum+" - Fitness "+fitHigh+".png";
-		File outputFile = new File(outputFolder + fileName);
+		//File outputFile = new File(outputFolder + fileName);
 		//ImageIO.write(outputImg, "png", outputFile);
 
 		String msgOutput = "\n> Gen. "+String.valueOf(genNum) +
