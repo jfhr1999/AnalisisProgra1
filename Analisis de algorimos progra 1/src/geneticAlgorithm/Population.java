@@ -14,7 +14,7 @@ public class Population
 	protected int maxGenePerc;
 	protected int individualPerc;
 	
-	protected void setStartingPopulation(int startingPop, int width, int height) {
+	protected void setPopulationSize(int startingPop, int width, int height) {
 		individuals = new ArrayList<Individual>();
 		for (int i = 0; i < startingPop; i++) {
 			individuals.add(new Individual(width, height));
@@ -69,7 +69,7 @@ public class Population
 				indvPixelVal = indvPixel.getBlue();
 				metaPixel = new Color(metaImg.getRGB(x, y));
 				metaPixelVal = metaPixel.getBlue();
-				sum += (indvPixelVal - metaPixelVal)*(indvPixelVal - metaPixelVal);
+				sum += (metaPixelVal - indvPixelVal)*(metaPixelVal - indvPixelVal);
 			}
 		}
 		Math.sqrt(sum);

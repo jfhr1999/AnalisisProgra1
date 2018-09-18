@@ -39,7 +39,7 @@ public class AppWin extends JFrame {
 	private BufferedImage grayscaleImg;
 	private JCheckBox chkbx_grayscale;
 	
-	private JSlider sldr_startingPop;
+	private JSlider sldr_populationSize;
 	private JSlider sldr_genNum;
 	private JSlider sldr_fitMin;
 	private JSlider sldr_genePerc;
@@ -233,6 +233,7 @@ public class AppWin extends JFrame {
 		mainPane.add(progressBar);
 		
 		JLabel lbl_execTime = new JLabel("00:00:00.0");
+		lbl_execTime.setForeground(Color.BLUE);
 		lbl_execTime.setHorizontalAlignment(SwingConstants.TRAILING);
 		lbl_execTime.setBounds(668, 740, 100, 30);
 		lbl_execTime.setFont(fnt_normal);
@@ -248,39 +249,39 @@ public class AppWin extends JFrame {
 				+"\n\nProyecto 1: Van Gogh Evolucional"
 				+  "\nElaborado por:"
 				+  "\n> 2017146886 = Carlos Roberto Esquivel Morales"
-				+  "\n> 2017###### = José Fabio Hidalgo Rodriguez"
+				+  "\n> 2017100950 = José Fabio Hidalgo Rodriguez"
 				+"\n\nSemestre 2, 2018";
 		JOptionPane.showMessageDialog(rootPane, msg, "About", JOptionPane.INFORMATION_MESSAGE);
 	}
 	
 	private void generalOptionsStartup(JPanel pnl)
 	{
-		JLabel lbl_startingPop = new JLabel("Poblaci\u00F3n inicial:");
-		lbl_startingPop.setBounds(15, 15, 150, 20);
-		lbl_startingPop.setFont(fnt_normal);
-		pnl.add(lbl_startingPop);
+		JLabel lbl_populationSize = new JLabel("Poblaci\u00F3n inicial:");
+		lbl_populationSize.setBounds(15, 15, 150, 20);
+		lbl_populationSize.setFont(fnt_normal);
+		pnl.add(lbl_populationSize);
 		
 		JLabel lbl_startingPopNum = new JLabel("512");
 		lbl_startingPopNum.setBounds(339, 35, 40, 30);
 		lbl_startingPopNum.setFont(fnt_normal);
 		pnl.add(lbl_startingPopNum);
 		
-		sldr_startingPop = new JSlider();
-		sldr_startingPop.setMajorTickSpacing(256);
-		sldr_startingPop.setEnabled(false);
-		sldr_startingPop.setMaximum(2048);
-		sldr_startingPop.setMinorTickSpacing(64);
-		sldr_startingPop.setValue(512);
-		sldr_startingPop.setMinimum(256);
-		sldr_startingPop.setPaintTicks(true);
-		sldr_startingPop.setBounds(25, 35, 300, 30);
-		sldr_startingPop.addChangeListener(new ChangeListener() {
+		sldr_populationSize = new JSlider();
+		sldr_populationSize.setMajorTickSpacing(256);
+		sldr_populationSize.setEnabled(false);
+		sldr_populationSize.setMaximum(2048);
+		sldr_populationSize.setMinorTickSpacing(64);
+		sldr_populationSize.setValue(512);
+		sldr_populationSize.setMinimum(256);
+		sldr_populationSize.setPaintTicks(true);
+		sldr_populationSize.setBounds(25, 35, 300, 30);
+		sldr_populationSize.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent arg0) {
-				int startingPop = sldr_startingPop.getValue();
+				int startingPop = sldr_populationSize.getValue();
 				lbl_startingPopNum.setText(String.valueOf(startingPop));
 			}
 		});
-		pnl.add(sldr_startingPop);
+		pnl.add(sldr_populationSize);
 		
 		JLabel lbl_fitness = new JLabel("Algoritmo de aptitud:");
 		lbl_fitness.setBounds(15, 80, 200, 20);
@@ -409,7 +410,7 @@ public class AppWin extends JFrame {
 		pnl.add(rdbtn_fitMin);
 		
 		
-		JLabel lbl_fitMin = new JLabel("85");
+		JLabel lbl_fitMin = new JLabel("70");
 		lbl_fitMin.setHorizontalAlignment(SwingConstants.CENTER);
 		lbl_fitMin.setBounds(340, 160, 40, 30);
 		lbl_fitMin.setFont(fnt_normal);
@@ -419,7 +420,7 @@ public class AppWin extends JFrame {
 		sldr_fitMin.setEnabled(false);
 		sldr_fitMin.setMinorTickSpacing(1);
 		sldr_fitMin.setMajorTickSpacing(5);
-		sldr_fitMin.setMinimum(70);
+		sldr_fitMin.setMinimum(60);
 		sldr_fitMin.setMaximum(95);
 		sldr_fitMin.setValue(70);
 		sldr_fitMin.setPaintTicks(true);
@@ -555,8 +556,8 @@ public class AppWin extends JFrame {
 			chkbx_grayscale.setSelected(false);
 		
 		//starting population slider
-		if (!sldr_startingPop.isEnabled())
-			sldr_startingPop.setEnabled(true);
+		if (!sldr_populationSize.isEnabled())
+			sldr_populationSize.setEnabled(true);
 		
 		//size label
 		String sizeStr = "Tamaño: ";
@@ -595,7 +596,11 @@ public class AppWin extends JFrame {
 	
 	public void startAlgorithm()
 	{
-		txt_appConsole.setText(null);
+		txt_appConsole.setText("\t= = = = = = =  = = = = = = ="
+						   + "\n\t= = COMENZANDO ALGORITMO = ="
+						   + "\n\t= = = = = = =  = = = = = = =");
+		
+		
 		
 		int width = sourceImg.getWidth(), 
 			height = sourceImg.getHeight();
@@ -607,20 +612,37 @@ public class AppWin extends JFrame {
 		BufferedImage metaImg = getGrayscale(resizeImg(width, height, sourceImg));
 		algorithmManager.setMetaImg(metaImg);
 		
-		algorithmManager.setStartingPopulation(sldr_startingPop.getValue());
+		String parameterStr = "\n## PARAMETROS: ";
+
+		int popSize = sldr_populationSize.getValue();
+		algorithmManager.setPopulationSize(popSize);
+		parameterStr += "\n# > Tamaño de poblacion: "+String.valueOf(popSize) +
+						"\n# > Algoritmo de aptitud: "+algorithmManager.getFitnessAlgorithm() +
+						"\n# > Tipo de cruce: "+algorithmManager.getCrossoverType() +
+						"\n# > Condición de parada: ";
 		
 		if (sldr_genNum.isEnabled()) {
-			algorithmManager.setGenTotal(sldr_genNum.getValue());
+			int genNum = sldr_genNum.getValue();
+			algorithmManager.setGenTotal(genNum);
 			algorithmManager.setFitnessMin(-1);
+			parameterStr += "Pasadas "+String.valueOf(genNum)+" generaciones";
 		}
 		else {
-			algorithmManager.setFitnessMin(sldr_fitMin.getValue());
+			int fitMin = sldr_fitMin.getValue();
+			algorithmManager.setFitnessMin(fitMin);
 			algorithmManager.setGenTotal(-1);
+			parameterStr += "Mínimo "+String.valueOf(fitMin)+" de puntaje de aptitud";
 		}
 		
-		algorithmManager.setGenePercentage(sldr_genePerc.getValue());
-		algorithmManager.setIndvPercentage(sldr_indvPerc.getValue());
+		int genePerc = sldr_genePerc.getValue(),
+			indvPerc =sldr_indvPerc.getValue();
+		algorithmManager.setGenePercentage(genePerc);
+		parameterStr += "\n# > % de genes a mutar de un individuo: de 5% a "+String.valueOf(genePerc)+"%";
+		algorithmManager.setIndvPercentage(indvPerc);		
+		parameterStr += "\n# > % de mutar de un individuo: "+String.valueOf(indvPerc)+"%";
 		
+		writeMsg(parameterStr);
+
 		setUIEnabled(false);
 		algorithmThread = new Thread(algorithmManager);
 		timerThread = new Thread(timer);

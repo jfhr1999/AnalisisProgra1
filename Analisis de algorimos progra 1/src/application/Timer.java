@@ -1,5 +1,7 @@
 package application;
 
+import java.awt.Color;
+
 import javax.swing.JLabel;
 
 public class Timer implements Runnable
@@ -13,6 +15,7 @@ public class Timer implements Runnable
 	
 	@Override
 	public void run() {
+		lbl_text.setForeground(Color.BLACK);
 		run = true;
 		long startTime = System.currentTimeMillis(),
 			 elapsedTime,
@@ -40,5 +43,6 @@ public class Timer implements Runnable
 	
 	public void stop() {
 		run = false;
+		lbl_text.setForeground(Color.BLUE);
 	}
 }

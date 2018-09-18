@@ -55,9 +55,45 @@ public class AlgorithmManager implements Runnable
 		population.individualPerc = pPerc;
 	}
 	
+	public String getFitnessAlgorithm() 
+	{
+		String algorithm = "";
+		switch(selectedAlgorithm)
+		{
+		case(FIT_Euclidean):
+			algorithm = "Similitud Euclideana";
+			break;
+		case(FIT_Algorithm1):
+			algorithm = "Algorithm1";
+			break;
+		case(FIT_Algorithm2):
+			algorithm = "Algorithm2";
+			break;
+		}
+		return algorithm;
+	}
 	public void setFitnessAlgorithm(int selected) {
 		selectedAlgorithm = selected;
 	}
+	
+	public String getCrossoverType()
+	{
+		String crossover = "";
+		switch(selectedCrossover)
+		{
+		case(CROSS_Hor):
+			crossover = "Mitad horizontal";
+			break;
+		case(CROSS_Vert):
+			crossover = "Mitad vertical";
+			break;
+		case(CROSS_Quart):
+			crossover = "Cuartos de imagen";
+			break;
+		}
+		return crossover;
+	}
+	
 	public void setCrossoverType(int selected) {
 		selectedCrossover = selected;
 	}
@@ -66,8 +102,8 @@ public class AlgorithmManager implements Runnable
 		metaImg = img;
 	}
 	
-	public void setStartingPopulation(int num) {
-		population.setStartingPopulation(num, metaImg.getWidth(), metaImg.getHeight());
+	public void setPopulationSize(int num) {
+		population.setPopulationSize(num, metaImg.getWidth(), metaImg.getHeight());
 	}
 
 	public AlgorithmManager(AppWin pApp) {
@@ -152,7 +188,7 @@ public class AlgorithmManager implements Runnable
 	{
 		String fileName = "/Gen"+genNum+" - Fitness "+fitHigh+".png";
 		File outputFile = new File(outputFolder + fileName);
-		ImageIO.write(outputImg, "png", outputFile);
+		//ImageIO.write(outputImg, "png", outputFile);
 
 		String msgOutput = "\n> Gen. "+String.valueOf(genNum) +
 						   "\n     Aptitud Máx: "+String.valueOf(fitHigh) +
