@@ -40,7 +40,7 @@ public class Population
 				break;
 			
 			case(AlgorithmManager.FIT_Algorithm1):
-				fitnessScore = Fitness1(indv);
+				fitnessScore = ManhatthanFitness(indv,metaImg);
 				break;
 			
 			case(AlgorithmManager.FIT_Algorithm2):
@@ -77,9 +77,27 @@ public class Population
 		return fitness;
 	}
 	
-	private int Fitness1(Individual indv)
+	private int ManhatthanFitness(Individual indv, BufferedImage metaImg)
 	{
-		return 0;
+		int width = metaImg.getWidth(),
+				height = metaImg.getHeight(),
+				indvPixelVal, metaPixelVal,
+				fitness;
+			Color indvPixel, metaPixel;
+			double sum = 0;
+			for (int y = 0; y < height; ++y)
+			{
+				for (int x = 0; x < width; ++x)
+				{
+					indvPixel = indv.getPixelAt(x, y);
+					indvPixelVal = indvPixel.getBlue();
+					metaPixel = new Color(metaImg.getRGB(x, y));
+					metaPixelVal = metaPixel.getBlue();
+					sum += Math.abs(indvPixelVal - metaPixelVal);
+				}
+			}
+			fitness = (int) ((sum / (width*height)) / 10000000);
+			return fitness;
 	}
 	
 	private int Fitness2(Individual indv)
