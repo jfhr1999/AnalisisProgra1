@@ -44,7 +44,7 @@ public class Population
 				break;
 			
 			case(AlgorithmManager.FIT_Custom):
-				fitnessScore = Fitness2(indv,metaImg);
+				fitnessScore = CustomFitness(indv,metaImg);
 				break;
 			}
 			indv.setFitnessScore(fitnessScore);
@@ -58,7 +58,8 @@ public class Population
 		int width = metaImg.getWidth(),
 			height = metaImg.getHeight(),
 			indvPixelVal, metaPixelVal,
-			fitness, sum = 0;
+			fitness;
+		int sum = 0;
 		Color indvPixel, metaPixel;
 		for (int y = 0; y < height; ++y)
 		{
@@ -71,8 +72,10 @@ public class Population
 				sum += (metaPixelVal - indvPixelVal)*(metaPixelVal - indvPixelVal);
 			}
 		}
-		Math.sqrt(sum);
-		fitness = (int) ((sum / (width*height)) / 1000);
+		sum = (int) Math.sqrt(sum);
+		int maxDiff = (int) Math.sqrt(Math.pow(255, 2)*(width*height));
+		fitness = (int) (100 - (sum*100/maxDiff));
+		//System.out.println("100 - ( "+sum+"*100 / "+maxDiff+" ) = "+ fitness);
 		return fitness;
 	}
 	
@@ -92,19 +95,20 @@ public class Population
 				indvPixelVal = indvPixel.getBlue();
 				metaPixel = new Color(metaImg.getRGB(x, y));
 				metaPixelVal = metaPixel.getBlue();
-				sum += Math.abs(indvPixelVal - metaPixelVal);
+				sum += Math.abs(metaPixelVal - indvPixelVal);
 			}
 		}
 		fitness = 100 - (sum / (width*height));
 		return fitness;
 	}
 	
-	private int Fitness2(Individual indv, BufferedImage metaImage)
+	private int CustomFitness(Individual indv, BufferedImage metaImage)
 	{
 		int width = metaImage.getWidth(),
 			height = metaImage.getHeight(),
-			MicroDet = 0, a,b,c,d,
-			sum = 0, fitness;
+			MicroDet = 0, sum = 0,
+			fitness, possibleMatrx = 0,
+			a,b,c,d;
 		Color aIndv, bIndv, cIndv, dIndv,
 			  aMeta, bMeta, cMeta, dMeta;
 		for (int y = 0; y < (height-1); ++y)
@@ -116,20 +120,22 @@ public class Population
 				cIndv = indv.getPixelAt(x, y+1);	cMeta = new Color(metaImage.getRGB(x, y + 1));
 				dIndv = indv.getPixelAt(x+1, y+1);	dMeta = new Color(metaImage.getRGB(x+1, y+1));
 				
-				a = aIndv.getBlue() - aMeta.getBlue();
-				b = bIndv.getBlue() - bMeta.getBlue();
-				c = cIndv.getBlue() - cMeta.getBlue();
-				d = dIndv.getBlue() - dMeta.getBlue();
+				a = aMeta.getBlue() - aIndv.getBlue();
+				b = bMeta.getBlue() - bIndv.getBlue();
+				c = cMeta.getBlue() - cIndv.getBlue();
+				d = dMeta.getBlue() - dIndv.getBlue();
 				
 				MicroDet = (a*c) - (b*d);
 				
 				sum += Math.abs(MicroDet);
+				possibleMatrx++;
 			}
 		}
-		double div = height/2;
-		fitness =(int) (sum/Math.pow(10, div + 1));
-		System.out.println(fitness);
-		return fitness;
+		float maxMatrx = 65025*possibleMatrx; //255^2
+		
+		fitness = (int) ((sum/maxMatrx)*100.0);
+		//System.out.println(sum + " / "+maxMatrx+" *100 = " +fitness+" - 100 = "+ (100 - fitness));
+		return 100 - fitness;
 	}
 	
 	//bubble sort, ordena de mayor a menor

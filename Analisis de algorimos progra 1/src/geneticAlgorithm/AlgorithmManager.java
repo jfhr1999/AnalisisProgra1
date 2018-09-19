@@ -30,6 +30,7 @@ public class AlgorithmManager implements Runnable
 	//END CONDITION
 	private int generationTotal = -1;
 	private int fitnessMin = -1;
+	private int gen0_Fitness = 0;
 	
 	private int selectedAlgorithm = 0;
 	private int selectedCrossover = 0;
@@ -61,10 +62,10 @@ public class AlgorithmManager implements Runnable
 		switch(selectedAlgorithm)
 		{
 		case(FIT_Euclidean):
-			algorithm = "Similitud Euclideana";
+			algorithm = "Distancia Euclideana";
 			break;
 		case(FIT_Manhattan):
-			algorithm = "Algoritmo Manhattan";
+			algorithm = "Distancia Manhattan";
 			break;
 		case(FIT_Custom):
 			algorithm = "Algoritmo Personalizado";
@@ -129,14 +130,18 @@ public class AlgorithmManager implements Runnable
 		return out;
 	}
 	
-	private void updateProgressBar(int genNum, int fitHigh)
+	//devuelve el porcentaje de progreso
+	private float updateProgressBar(int genNum, int fitHigh)
 	{
 		float out;
 		if (generationTotal > 0)
 			out = (genNum/ (float) generationTotal)*100;
 		else
-			out = (fitHigh/ (float) fitnessMin)*100;
+			out = ((fitHigh - gen0_Fitness) / (float) (fitnessMin - gen0_Fitness))*100;
+		out = (float) (Math.round(out*100)/100.0);
 		Application.updateProgressBar((int) out);
+		//System.out.println((fitHigh - gen0_Fitness) + " / " + (fitnessMin - gen0_Fitness)+ " *100 = "+out + "\tOffset: "+gen0_Fitness);
+		return out;
 	}
 	
 	@Override
@@ -147,7 +152,7 @@ public class AlgorithmManager implements Runnable
 		try {
 			int genNum = 0,
 				fitHigh = 0;
-			float genPerc;
+			float genPercent;
 			while (!stopCondition(genNum, fitHigh) && !manualStop)
 			{
 				population.AssignFitnessScores(metaImg, selectedAlgorithm);
@@ -157,13 +162,11 @@ public class AlgorithmManager implements Runnable
 				Application.setOutputImg(outputImg);
 				Application.setGeneration(genNum);
 
-				updateProgressBar(genNum, fitHigh);
-				genPerc = (genNum/ (float) generationTotal)*100;
-				if ((generationTotal > 0 && (genPerc%10 ==  0) ) ||
-					(fitnessMin > 0 && (genNum%500 == 0)))
+				genPercent = updateProgressBar(genNum, fitHigh);;
+				if ((generationTotal > 0 && genPercent%10.0 == 0.0) ||
+					(fitnessMin > 0 && genNum%500 == 0))
 					writeFile(outputFolder, outputImg, genNum, fitHigh);
 				genNum++;
-				
 				population.crossover(selectedCrossover);
 				population.mutate();
 			}

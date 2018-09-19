@@ -297,7 +297,7 @@ public class AppWin extends JFrame {
 		lbl_fitness.setFont(fnt_normal);
 		pnl.add(lbl_fitness);
 		
-		JRadioButton rdbtn_Fit0 = new JRadioButton("Similitud Euclideana");
+		JRadioButton rdbtn_Fit0 = new JRadioButton("Distancia Euclideana");
 		rdbtn_Fit0.setSelected(true);
 		rdbtn_Fit0.setBounds(15, 110, 200, 25);
 		rdbtn_Fit0.setFont(fnt_normal);
@@ -308,7 +308,7 @@ public class AppWin extends JFrame {
 		});
 		pnl.add(rdbtn_Fit0);
 		
-		JRadioButton rdbtn_Fit1 = new JRadioButton("Algoritmo Manhattan");
+		JRadioButton rdbtn_Fit1 = new JRadioButton("Distancia Manhattan");
 		rdbtn_Fit1.setBounds(15, 140, 200, 25);
 		rdbtn_Fit1.setFont(fnt_normal);
 		rdbtn_Fit1.addActionListener(new ActionListener() {

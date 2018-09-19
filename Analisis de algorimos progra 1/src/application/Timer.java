@@ -18,23 +18,25 @@ public class Timer implements Runnable
 		lbl_text.setForeground(Color.BLACK);
 		run = true;
 		long startTime = System.currentTimeMillis(),
-			 elapsedTime,
-			 millisDisplay,
+			 elapsedTime;
+		int	 millisDisplay,
 			 elapsedSeconds,
 			 secondsDisplay,
 			 elapsedMinutes,
+			 minutesDisplay,
 			 elapsedHours;
 		String timeStr;
 		while (run)
 		{
 			elapsedTime = System.currentTimeMillis() - startTime;
-			millisDisplay = elapsedTime % 1000;
-			elapsedSeconds = elapsedTime / 1000;
+			millisDisplay = (int) (elapsedTime % 1000);
+			elapsedSeconds = (int) (elapsedTime / 1000);
 			secondsDisplay = elapsedSeconds % 60;
 			elapsedMinutes = elapsedSeconds / 60;
+			minutesDisplay = elapsedMinutes % 60;
 			elapsedHours = elapsedMinutes / 60;
 			timeStr = String.valueOf(elapsedHours) + ":" +
-					  String.valueOf(elapsedMinutes) + ":" +
+					  String.valueOf(minutesDisplay) + ":" +
 					  String.valueOf(secondsDisplay) + "." +
 					  String.valueOf(millisDisplay);
 			lbl_text.setText(timeStr);
