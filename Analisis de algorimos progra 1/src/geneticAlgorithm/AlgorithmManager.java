@@ -1,12 +1,12 @@
 package geneticAlgorithm;
 
 import java.awt.image.BufferedImage;
-//import java.io.File;
+import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 
-//import javax.imageio.ImageIO;
+import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
 import application.AppWin;
@@ -116,9 +116,9 @@ public class AlgorithmManager implements Runnable
 	{
 		Date date = new Date();
 		Timestamp ts = new Timestamp(date.getTime());
-		String output = ts.toString().replace('-', '_');
-		output = output.replace(':', '-');
-		return  "/src/output/" + output;
+		String pathName = ts.toString().replace('-', '_');
+		pathName = pathName.replace(':', '-');
+		return  "output/" + pathName;
 	}
 	
 	private boolean stopCondition(int genNum, int fitHigh)
@@ -140,7 +140,6 @@ public class AlgorithmManager implements Runnable
 			out = ((fitHigh - gen0_Fitness) / (float) (fitnessMin - gen0_Fitness))*100;
 		out = (float) (Math.round(out*100)/100.0);
 		Application.updateProgressBar((int) out);
-		//System.out.println((fitHigh - gen0_Fitness) + " / " + (fitnessMin - gen0_Fitness)+ " *100 = "+out + "\tOffset: "+gen0_Fitness);
 		return out;
 	}
 	
@@ -148,7 +147,7 @@ public class AlgorithmManager implements Runnable
 	public void run() {
 		BufferedImage outputImg;
 		String outputFolder = outputFolderName();
-		//new File(outputFolder).mkdir();
+		new File(outputFolder).mkdir();
 		try {
 			int genNum = 0,
 				fitHigh = 0;
@@ -193,8 +192,9 @@ public class AlgorithmManager implements Runnable
 	private void writeFile(String outputFolder, BufferedImage outputImg, int genNum, int fitHigh) throws IOException 
 	{
 		String fileName = "/Gen"+genNum+" - Fitness "+fitHigh+".png";
-		//File outputFile = new File(outputFolder + fileName);
-		//ImageIO.write(outputImg, "png", outputFile);
+		outputImg = Application.resizeImg(320, 320, outputImg);
+		File outputFile = new File(outputFolder + fileName);
+		ImageIO.write(outputImg, "png", outputFile);
 
 		String msgOutput = "\n> Gen. "+String.valueOf(genNum) +
 						   "\n     Aptitud Máx: "+String.valueOf(fitHigh) +
